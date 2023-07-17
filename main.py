@@ -7,9 +7,6 @@ from datetime import date, timedelta
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
-day = date.fromisoformat("2023-07-15")
-print(day - timedelta(days=7))
-
 
 def get_info(website):
     # Get data from website
@@ -21,9 +18,9 @@ def get_info(website):
 
 def get_songs(soup):
     songs = np.array([])
+
     h3 = soup.find_all("h3", id="title-of-a-story")
     s = "c-title a-no-trucate a-font-primary-bold-s"
-    c = 0
     for i in h3:
         if s in str(i):
             # print(str(i)[-20:-1])
@@ -32,8 +29,7 @@ def get_songs(soup):
             song = str(i)[start+12:end]
             song = song.replace("\n", "").replace("\t", "")
             songs = np.append(songs, song)
-            c += 1
-    print(c)
+
     return songs
 
 
@@ -53,20 +49,33 @@ def get_artists(soup):
     return artists
 
 
-def get_dataset():
+def get_dataset(website_link, weeks=1):
+    # Building dataset with Billboard100 songs
+    day = date.fromisoformat("2023-07-15")
+
+    artists = np.array([])
+    songs = np.array([])
+    positions = np.array([])
+    week = np.array([])
+    for i in range(weeks):
+        website = website_link.format(day)
+
+        html = get_info(website)
+        artists = np.append(artists, get_artists(html))
+        songs = np.append(songs, get_songs(html))
+        week = np.append(week, np.array([str(day)] * 100))
+        positions = np.append(positions, np.arange(1, 101))
+
+        day = day - timedelta(days=7)
+
+    data = np.array([artists, songs, positions, week]).T
+    df = pd.DataFrame(data)
+    df = df.rename(columns={0: "Artists", 1: "Songs", 2: "Position", 3: "Week"})
+    print(df)
     return
 
 
 if __name__ == '__main__':
-    website_link = "https://www.billboard.com/charts/hot-100/2023-07-15/"
-
-    html = get_info(website_link)
-    artists = get_artists(html)
-    songs = get_songs(html)
-    # print(artists)
-    # print(songs)
-    d = np.append([artists], [songs], axis=0).T
-    print(d)
-    df = pd.DataFrame(d)
-    print(df)
+    website_link = "https://www.billboard.com/charts/hot-100/{}/"
+    get_dataset(website_link, 4)
 
