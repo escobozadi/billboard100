@@ -98,10 +98,11 @@ class Visualizations(object):
 
         self.start = self.df["Week"].min()
         self.end = self.df["Week"].max()
+        # print(self.df)
 
-        print(self.df)
         # self.appearances()
-        # self.avg_position()
+        self.avg_position()
+        # self.song_woc()
 
     def appearances(self):
         # Number of appearance of artists in billboard100
@@ -125,7 +126,17 @@ class Visualizations(object):
 
         artist_data = pd.merge(avg_pos, num_weeks, how="inner", left_on="Artists", right_on="Artists")
         artist_data = artist_data.rename(columns={"Songs": "Count"}).sort_values(by="Position")
-        pd.DataFrame(artist_data).to_csv("./Artists_AvgPosition.csv")
+        pd.DataFrame(artist_data).to_csv("./tables/Artists_AvgPosition.csv")
+        return
+
+    def song_woc(self):
+        # songs and the number of weeks on chart (from the weeks in the time frame)
+        weeks_oc = self.df.groupby("Songs").count().reset_index()[["Songs", "Week"]]
+        weeks_oc = weeks_oc.sort_values(by="Week", ascending=False)
+
+        # songs that appear in all the weeks
+        songs_alltime = weeks_oc.loc[weeks_oc["Week"] == self.df["Week"].nunique()]
+
         return
 
 
