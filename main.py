@@ -1,9 +1,10 @@
 # Web Data Scrapping
 from bs4 import BeautifulSoup
+from datetime import date, timedelta
 from urllib.request import urlopen
 import pandas as pd
 import numpy as np
-from datetime import date, timedelta
+import matplotlib.pyplot as plt
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -85,7 +86,34 @@ class Dataset(object):
         return artists
 
 
+class Visualizations(object):
+
+    def __init__(self, file_name,):
+        self.file = file_name
+        self.df = pd.DataFrame(pd.read_csv("./" + self.file, index_col=0))
+        self.start = self.df["Week"].min()
+        self.end = self.df["Week"].max()
+
+        # self.appearances()
+
+    def appearances(self):
+        # Number of appearance of artists in billboard100
+        num_appearances = self.df.groupby(["Artists"]).count()[["Songs"]].sort_values(by="Songs", ascending=False)
+        num_appearances = num_appearances.reset_index()
+
+        plt.style.use("ggplot")
+        fig, ax = plt.subplots()
+        bars = ax.barh(num_appearances.iloc[:10]["Artists"], num_appearances.iloc[:10]["Songs"],
+                       color="maroon")
+        ax.bar_label(bars)
+        plt.xlabel("Number of Appearances")
+        plt.title("Top Artist with most Appearance in Billboard100 \n"
+                  "from {} to {}".format(self.start, self.end))
+        plt.show()
+
+
 if __name__ == '__main__':
     link = "https://www.billboard.com/charts/hot-100/{}/"
-    Dataset(link, 8)
-
+    file = "billboard100_2023-07-15_2023-05-20.csv"
+    # Dataset(link, 8, "2023-07-15")
+    Visualizations(file)
