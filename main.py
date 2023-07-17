@@ -98,11 +98,12 @@ class Visualizations(object):
 
         self.start = self.df["Week"].min()
         self.end = self.df["Week"].max()
+        self.df["Position"] = self.df["Position"].values.astype(int)
         # print(self.df)
 
         # self.appearances()
-        self.avg_position()
-        # self.song_woc()
+        # self.avg_position()
+        self.song_woc()
 
     def appearances(self):
         # Number of appearance of artists in billboard100
@@ -136,6 +137,27 @@ class Visualizations(object):
 
         # songs that appear in all the weeks
         songs_alltime = weeks_oc.loc[weeks_oc["Week"] == self.df["Week"].nunique()]
+        songs_alltime = pd.merge(songs_alltime["Songs"], self.df, how="left", left_on="Songs", right_on="Songs")
+        songs_alltime = songs_alltime[["Artists", "Songs", "Position", "Week"]].sort_values(["Songs", "Week"])
+        print(songs_alltime[["Artists", "Songs", "Position", "Week"]].sort_values(["Songs", "Week"]))
+
+        x = self.df["Week"].dt.strftime("%d-%m-%Y").unique()[::-1]
+        songs = songs_alltime["Songs"].unique()[:10]
+        artists = songs_alltime["Artists"].unique()
+
+        plt.style.use("ggplot")
+        fig, axs = plt.subplots(2, 2)
+        n = len(songs)/4
+        plot_n = 1
+        for i in range(len(songs)):
+            song = songs[i * plot_n]
+            y = songs_alltime.loc[songs_alltime["Songs"] == song, "Position"]
+            # print(y)
+            # print(self.df.loc[self.df["Songs"] == "Ain't That Some"])
+            plt.plot(x, y, label=song + "\nby " + artists[i])
+        plt.legend(loc="upper right", fontsize="5")
+        plt.title("Song Position in Billboard100 Throughout the Weeks")
+        plt.show()
 
         return
 
