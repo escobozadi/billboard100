@@ -91,10 +91,17 @@ class Visualizations(object):
     def __init__(self, file_name,):
         self.file = file_name
         self.df = pd.DataFrame(pd.read_csv("./" + self.file, index_col=0))
+        self.df["Week"] = pd.to_datetime(self.df["Week"])
+        self.df["Year"] = self.df["Week"].dt.year
+        self.df["Month"] = self.df["Week"].dt.month
+        self.df["Day"] = self.df["Week"].dt.day
+
         self.start = self.df["Week"].min()
         self.end = self.df["Week"].max()
 
+        print(self.df)
         # self.appearances()
+        # self.avg_position()
 
     def appearances(self):
         # Number of appearance of artists in billboard100
@@ -110,6 +117,16 @@ class Visualizations(object):
         plt.title("Top Artist with most Appearance in Billboard100 \n"
                   "from {} to {}".format(self.start, self.end))
         plt.show()
+
+    def avg_position(self):
+        avg_pos = self.df.groupby("Artists").mean().reset_index()
+        avg_pos["Position"] = round(avg_pos["Position"], 2)
+        num_weeks = self.df.groupby("Artists").count()["Songs"]
+
+        artist_data = pd.merge(avg_pos, num_weeks, how="inner", left_on="Artists", right_on="Artists")
+        artist_data = artist_data.rename(columns={"Songs": "Count"}).sort_values(by="Position")
+        pd.DataFrame(artist_data).to_csv("./Artists_AvgPosition.csv")
+        return
 
 
 if __name__ == '__main__':
