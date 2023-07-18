@@ -139,24 +139,33 @@ class Visualizations(object):
         songs_alltime = weeks_oc.loc[weeks_oc["Week"] == self.df["Week"].nunique()]
         songs_alltime = pd.merge(songs_alltime["Songs"], self.df, how="left", left_on="Songs", right_on="Songs")
         songs_alltime = songs_alltime[["Artists", "Songs", "Position", "Week"]].sort_values(["Songs", "Week"])
-        print(songs_alltime[["Artists", "Songs", "Position", "Week"]].sort_values(["Songs", "Week"]))
+        # print(songs_alltime[["Artists", "Songs", "Position", "Week"]].sort_values(["Songs", "Week"]))
+        # print(songs_alltime.groupby("Songs").filter(lambda x: x["Position"].min() > 50))
+
+        # Songs that appear in all weeks and always above position 50
+        above_50 = songs_alltime.groupby("Songs").filter(lambda x: x["Position"].min() < 10)
+        songs = above_50["Songs"].unique()
+        artists = above_50["Artists"].unique()
+        print(above_50["Songs"].unique())
 
         x = self.df["Week"].dt.strftime("%d-%m-%Y").unique()[::-1]
-        songs = songs_alltime["Songs"].unique()[:10]
-        artists = songs_alltime["Artists"].unique()
+        # songs = songs_alltime["Songs"].unique()[:10]
+        # artists = songs_alltime["Artists"].unique()
 
         plt.style.use("ggplot")
-        fig, axs = plt.subplots(2, 2)
+        fig, axs = plt.subplots()
         n = len(songs)/4
         plot_n = 1
         for i in range(len(songs)):
             song = songs[i * plot_n]
             y = songs_alltime.loc[songs_alltime["Songs"] == song, "Position"]
-            # print(y)
-            # print(self.df.loc[self.df["Songs"] == "Ain't That Some"])
             plt.plot(x, y, label=song + "\nby " + artists[i])
-        plt.legend(loc="upper right", fontsize="5")
-        plt.title("Song Position in Billboard100 Throughout the Weeks")
+
+        axs.invert_yaxis()
+        plt.legend(loc="lower right", fontsize="5")
+        print(self.start)
+        plt.title("Songs in the Top 10 Position on Billboard100\nfrom {} to {}".format(self.start.strftime("%d-%m-%Y"),
+                                                                                       self.end.strftime("%d-%m-%Y")))
         plt.show()
 
         return
